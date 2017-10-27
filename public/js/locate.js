@@ -10,7 +10,6 @@ function error(err) {
 
 function getLocation() {
     if (navigator.geolocation) {
-        console.log("Getting location")
         navigator.geolocation.getCurrentPosition(showPosition, error, options);
     } else {
         $("#dstatus").text("Geolocation is not supported");

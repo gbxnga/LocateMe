@@ -1,30 +1,37 @@
-var googleMapsClient = require('@google/maps').createClient({
-    key: 'AIzaSyBKC0Fis9NK3KYx9X11UbIp6yxLxsUjxlE'
-});
+// Load api key from .env file
+require('dotenv').config();
+
+// Create a google maps client with apikey from environment
+var googleMapsClient = require('@google/maps').createClient({key: process.env.API_KEY});
+
 var express= require('express');
 var bodyParser = require('body-parser');
-var cors = require('cors');
+var path = require('path');
 var app = express();
+
+// Required to allow client-side to make request to this server
+var cors = require('cors');
 app.use(cors());
 
-// app.use(bodyParser.json());
+// Enable reading POST data from forms
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// Setting up the frontend stuff
+app.use(express.static(path.join(__dirname, 'public')));
+
+
+// Main Route
 app.get('/', function(req,res){
-    res.send("Hello World");
+    res.sendFile("index.html");
 });
 
+// Returns the Digital Address of GPS
 app.post('/address',function(req,res){
-    console.log("address!==========================>");
-    console.log(req.body);
     var lat = parseFloat(req.body.lat);
     var lon = parseFloat(req.body.lon);
-    
-    console.log(lat);
-    console.log(lon);
-    
+
     googleMapsClient.reverseGeocode({
-        latlng: [parseFloat(lat), parseFloat(lon)]
+        latlng: [lat, lon]
     }, function (err, response) {
         if (!err) {
             res.json(response.json.results[0]);
@@ -35,5 +42,5 @@ app.post('/address',function(req,res){
 })
 
 app.listen(3000,function(){
-
+    console.log("Listening on Port 3000");
 })
