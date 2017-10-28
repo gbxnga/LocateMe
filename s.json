@@ -1,0 +1,32 @@
+
+{types: ['administrative_area_level_2', 'political']
+}, {
+    long_name: 'Greater Accra Region',
+    short_name: 'Greater Accra Region',
+    types: ['administrative_area_level_1', 'political']
+}, {
+    long_name: 'Ghana',
+    short_name: 'GH',
+    types: ['country', 'political']
+}]
+[{
+        long_name: 'University Avenue',
+        short_name: 'University Ave',
+        types: ['route']
+    },
+    {
+        long_name: 'Ga East',
+        short_name: 'Ga East',
+        types: ['administrative_area_level_2', 'political']
+    },
+    {
+        long_name: 'Greater Accra Region',
+        short_name: 'Greater Accra Region',
+        types: ['administrative_area_level_1', 'political']
+    },
+    {
+        long_name: 'Ghana',
+        short_name: 'GH',
+        types: ['country', 'political']
+    }
+]}

@@ -1,63 +1,57 @@
-var options = {
-    enableHighAccuracy: true,
-    timeout: 5000,
-    maximumAge: 0
-}
-
-function error(err) {
-    console.warn(`ERROR(${err.code}): ${err.message}`);
-}
+$(document).ready(function () {
+    txtAddress = $("#address");
+    txtStatus = $("#status");
+})
 
 function getLocation() {
+
+    // Check if geolocation is supported
     if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(showPosition, error, options);
+
+        var options = {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+        }
+
+        navigator.geolocation.getCurrentPosition(showPositionAndGetDAddress, error, options);
+
     } else {
-        $("#dstatus").text("Geolocation is not supported");
+        txtStatus.text("Geolocation is not supported");
     }
 }
 
-function getAddress(latitude,longitude) {
-    
+function showPositionAndGetDAddress(position) {
+    position = position.coords;
+    txtStatus.text("[" + position.latitude + " , " + position.longitude + "]  " + position.accuracy + "m");
+    getDAddress(position.latitude, position.longitude);
+
+}
+
+function error(err) {
+    console.warn("Error occured in getting location");
+}
+
+function getDAddress(latitude, longitude) {
+
     latlon = {
         lat: latitude,
         lon: longitude
     }
 
-    url = "http://localhost:3000/address";
+    url = "http://localhost:3000/test";
 
-    var formBody = [];
-
-    for (var k in latlon) {
-        var encocdedKey = encodeURIComponent(k);
-        var encocedValue = encodeURIComponent(latlon[k]);
-        formBody.push(encocdedKey + "=" + encocedValue);
-    }
-
-    formBody = formBody.join("&");
-
-    let fetchData = {
-        method: 'POST',
-        body: formBody,
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/x-www-form-urlencoded'
+    $.ajax({
+        type: 'POST',
+        url: url,
+        data: JSON.stringify(latlon),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (response) {
+            txtAddress.text(response.data);
         },
-    }
-
-    fetch(url, fetchData)
-        .then(res => res.json())
-        .then(function (response) {
-            console.log(response);
-        })
-        .catch(function (error) {
-            $("#dstatus").text(error);
-        })
-}
-
-function showPosition(position) {
-    console.log(position.coords);
-    $("#dstatus").text("(" + position.coords.latitude + " , " + position.coords.longitude + ") - Accuracy: " + position.coords.accuracy + " meters");
-
-    getAddress(position.coords.latitude,position.coords.longitude);
-
+        failure: function (error) {
+            txtStatus.text(error);
+        }
+    })
 }
