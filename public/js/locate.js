@@ -16,13 +16,11 @@ function getLocation() {
     }
 }
 
-function showPosition(position) {
-    console.log(position.coords);
-    $("#dstatus").text("(" + position.coords.latitude + " , " + position.coords.longitude + ") - Accuracy: " + position.coords.accuracy + " meters");
-
+function getAddress(latitude,longitude) {
+    
     latlon = {
-        lat: position.coords.latitude,
-        lon: position.coords.longitude
+        lat: latitude,
+        lon: longitude
     }
 
     url = "http://localhost:3000/address";
@@ -54,4 +52,12 @@ function showPosition(position) {
         .catch(function (error) {
             $("#dstatus").text(error);
         })
+}
+
+function showPosition(position) {
+    console.log(position.coords);
+    $("#dstatus").text("(" + position.coords.latitude + " , " + position.coords.longitude + ") - Accuracy: " + position.coords.accuracy + " meters");
+
+    getAddress(position.coords.latitude,position.coords.longitude);
+
 }
