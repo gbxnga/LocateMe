@@ -91,8 +91,11 @@ function GetDigitalAddress(lat, lon, address_comps) {
                     
                     // Convert distance to postcode
                     postCode = (toolbox.zeroFill(Math.ceil(distToCenter / 500), 4));
+
+                    // Create unique address - Generates random number between 1 and 9999
+                    unique = toolbox.zeroFill(CreateUniqueAddress(),4)
                     
-                    digitalAddress = region.substring(0, 1) + district.substring(0, 1) + '-' + postCode 
+                    digitalAddress = region.substring(0, 1) + district.substring(0, 1) + '-' + postCode + '-' + unique 
                     resolve(digitalAddress);
                 }
             )
@@ -120,3 +123,7 @@ function GetDistrict(geoinfo) {
     }
 }
 
+function CreateUniqueAddress(){
+    ad = Math.floor(Math.random() * 9999) + 1
+    return ad;
+}
