@@ -1,3 +1,7 @@
+// Necessary Tools
+var geo = require('./geo');
+var toolbox = require('./toolbox');
+
 // Load api key from .env file
 require('dotenv').config();
 
@@ -14,7 +18,7 @@ var app = express();
 var cors = require('cors');
 app.use(cors());
 
-// Enable reading POST data from forms
+// Enable reading JSON data from client-side
 app.use(bodyParser.json());
 
 // Setting up the path to frontend
@@ -31,11 +35,6 @@ app.get('/', function (req, res) {
     res.sendFile("index.html");
 });
 
-app.post('/test',function(req,res){
-    console.log(req.body);
-    res.json('correct');
-})
-
 // Returns the Digital Address of GPS
 app.post('/address', function (req, res) {
 
@@ -43,7 +42,7 @@ app.post('/address', function (req, res) {
     var lon = parseFloat(req.body.lon);
     console.log('Checking for [' + lat + ',' + lon + ']');
 
-    let info = new Promise((resolve, reject) => {
+    let ReverseGeoCode = new Promise((resolve, reject) => {
         googleMapsClient.reverseGeocode({
             latlng: [lat, lon]
         }, function (err, response) {
@@ -56,39 +55,51 @@ app.post('/address', function (req, res) {
         })
     });
 
-    info.then(
-        function (geoinfo) {
-            ad = geoinfo.address_components;
-            console.log(ad);
-            GetDigitalAddress(lat, lon, ad)
+    ReverseGeoCode.then(
+        function (addressInfo) {
+            console.log(addressInfo.address_components[1].long_name);
+            addressComponents = addressInfo.address_components;
+
+            GetDigitalAddress(lat, lon, addressComponents)
                 .then(
                 (response) => { res.json({ result: "success", data: response }) }
                 )
                 .catch(
-                (error) => { res.json({ result: 'error', data: error }) }
+                (error) => { console.log(error); res.json({ result: 'error', data: error }) }
                 )
         })
 })
 
+// Returns promise of DigitalAddress
 function GetDigitalAddress(lat, lon, address_comps) {
 
     let info = new Promise((resolve, reject) => {
+        
+        // Get Region
         region = GetRegion(address_comps);
+        
+        // Get District
         district = GetDistrict(address_comps);
 
-        GetCenterOfDistrict(district)
+        // Get Center of District
+        geo.Geocode(district)
             .then(
-            (center) => {
-                distToCenter = GetDistanceBetween(lat, lon, center.lat, center.lng);
-                postCode = (zeroFill(Math.ceil(distToCenter / 500), 4));
+                (geoinfo) => {
 
-                resolve(region.substring(0, 1) + district.substring(0, 1) + '-' + postCode);
-            }
+                    // Find distance from the point to center of district
+                    distToCenter = geo.GetDistanceBetween(lat, lon, geoinfo.lat, geoinfo.lng);
+                    
+                    // Convert distance to postcode
+                    postCode = (toolbox.zeroFill(Math.ceil(distToCenter / 500), 4));
+                    
+                    digitalAddress = region.substring(0, 1) + district.substring(0, 1) + '-' + postCode 
+                    resolve(digitalAddress);
+                }
             )
             .catch(
-            (error) => {
-                reject(error);
-            }
+                (error) => {
+                    reject(error);
+                }
             )
     })
     return info
@@ -96,85 +107,16 @@ function GetDigitalAddress(lat, lon, address_comps) {
 
 // Returns Region from geoinfo
 function GetRegion(geoinfo) {
-    return (Find('administrative_area_level_1', geoinfo));
+    return (toolbox.Find('administrative_area_level_1', geoinfo));
 }
 
 // Returns District from geoinfo
 function GetDistrict(geoinfo) {
-    district = Find('administrative_area_level_2', geoinfo);
+    district = toolbox.Find('administrative_area_level_2', geoinfo);
     if (district) {
         return district;
     } else {
-        return Find('locality', geoinfo);
+        return toolbox.Find('locality', geoinfo);
     }
 }
 
-// Returns GPS Coordinates for Center of a district
-function GetCenterOfDistrict(district) {
-    return Geocode(district)
-}
-
-// Returns distance between two GPS points
-function GetDistanceBetween(lat1, lon1, lat2, lon2) {
-    // console.log("Getting Distance between " + lat1 + "," + lon1 + " and " + lat2 + "," + lon2);
-    return parseInt(getDistanceFromLatLonInM(lat1, lon1, lat2, lon2));
-}
-
-// Generates a 4-digit ID for the space
-function GenerateUniqueAddress(lat, lon) {
-
-}
-
-function zeroFill(number, width) {
-    width -= number.toString().length;
-    if (width > 0) {
-        return new Array(width + (/\./.test(number) ? 2 : 1)).join('0') + number;
-    }
-    return number + ""; // always return a string
-}
-
-function Find(term, obj) {
-    result = null;
-    for (var i in obj) {
-        if (obj[i].types.includes(term)) {
-            result = obj[i].long_name
-            return result;
-        }
-    }
-    return result;
-}
-
-// Returns promises of a geoencode object
-function Geocode(d_address) {
-    let info = new Promise((resolve, reject) => {
-        googleMapsClient.geocode({
-            address: d_address
-        }, function (err, response) {
-            if (!err) {
-                geoinfo = response.json.results[0].geometry.location;
-                resolve(geoinfo);
-            } else {
-                reject(err);
-            }
-        })
-    });
-
-    return info;
-}
-
-function getDistanceFromLatLonInM(lat1, lon1, lat2, lon2) {
-    var R = 6371; // Radius of the earth in km
-    var dLat = deg2rad(lat2 - lat1); // deg2rad below
-    var dLon = deg2rad(lon2 - lon1);
-    var a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    var d = R * c; // Distance in km
-    return d * 1000;
-}
-
-function deg2rad(deg) {
-    return deg * (Math.PI / 180)
-}

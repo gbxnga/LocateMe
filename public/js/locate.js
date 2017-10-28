@@ -39,7 +39,7 @@ function getDAddress(latitude, longitude) {
         lon: longitude
     }
 
-    url = "http://localhost:3000/test";
+    url = "http://localhost:3000/address";
 
     $.ajax({
         type: 'POST',
@@ -48,10 +48,11 @@ function getDAddress(latitude, longitude) {
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function (response) {
+            console.log(response);
             txtAddress.text(response.data);
         },
         failure: function (error) {
-            txtStatus.text(error);
+            txtAddress.text("Error Occurred");
         }
     })
 }
