@@ -4,4 +4,4 @@ Basically, the idea was to give a unique adddress to every 5m x 5m area. The pro
 
 My inner scientists tingled and here's my attempt to recreate the Ghc3,500,000 GhanaPost system...
 
-Results were encouraging, I managed to generate most of the address. The challenge was getting the last 4 digits which are uniquely assigned and I wasn't certain which algorithm to create to make that. This side-project was completely experimental
+*Results were encouraging, I managed to generate most of the address. The challenge was getting the last 4 digits which are uniquely assigned and I wasn't certain which algorithm to create to make that. This side-project was completely experimental*
