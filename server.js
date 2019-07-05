@@ -52,7 +52,7 @@ app.post("/address", function(req, res) {
                 } else {
                     reject(err);
                 }
-            }
+            }w
         );
     });
 
